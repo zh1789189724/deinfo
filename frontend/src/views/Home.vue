@@ -43,8 +43,8 @@
                 {{ items[0].score }}
               </span>
             </div>
-            <h2 class="featured-title">{{ items[0].title }}</h2>
-            <p class="featured-summary">{{ items[0].summary || items[0].summary_cn || '暂无摘要' }}</p>
+            <h2 class="featured-title">{{ items[0].title_cn || items[0].title || items[0].original_title || '' }}</h2>
+            <p class="featured-summary">{{ items[0].summary_cn || items[0].summary || '...' }}</p>
             <div class="featured-action">
               <span class="read-more">阅读全文</span>
             </div>
@@ -78,11 +78,11 @@
                 {{ item.score }}
               </span>
             </div>
-            <h3 class="feed-card-title">{{ item.title }}</h3>
-            <p class="feed-card-summary">{{ item.summary || item.summary_cn || '暂无摘要' }}</p>
+            <h3 class="feed-card-title">{{ item.title_cn || item.title || item.original_title || '' }}</h3>
+            <p class="feed-card-summary">{{ item.summary_cn || item.summary || '...' }}</p>
             <div class="feed-card-footer">
               <span class="feed-source" v-if="item.source_url || item.original_url">原文</span>
-              <span class="feed-lang" v-if="item.lang">{{ item.lang }}</span>
+              <span class="feed-lang" v-if="item.lang || item.original_lang">{{ item.lang || item.original_lang }}</span>
             </div>
           </div>
         </template>

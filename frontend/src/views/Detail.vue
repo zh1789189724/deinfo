@@ -40,15 +40,15 @@
               {{ item.score }}
             </span>
             <a
-              v-if="item.sourceInfo"
-              :href="item.sourceInfo"
+              v-if="item.sourceInfo || item.original_url"
+              :href="item.sourceInfo || item.original_url"
               target="_blank"
               class="article-source"
             >
               来源
             </a>
           </div>
-          <h1 class="article-title">{{ item.title }}</h1>
+          <h1 class="article-title">{{ item.title_cn || item.title || item.original_title || '' }}</h1>
         </header>
 
         <div class="article-body">
@@ -62,8 +62,18 @@
               <p class="section-text">{{ item.content }}</p>
             </div>
           </div>
-          <div v-else class="content-text">
+          <div v-else-if="item.content" class="content-text">
             {{ item.content }}
+          </div>
+          <div v-else class="content-text">
+            <p>暂无详情内容</p>
+            <a
+              v-if="item.original_url"
+              :href="item.original_url"
+              target="_blank"
+              rel="noopener"
+              class="content-link"
+            >查看原文</a>
           </div>
         </div>
       </article>
@@ -82,16 +92,19 @@ const item = ref(null)
 const loading = ref(true)
 const error = ref(false)
 
-const isDeal = route.path.includes('deals')
+const isDeal = route.path.includes('/deals/')
+const isGlobal = route.path.includes('/global/')
 
 async function fetchDetail() {
   loading.value = true
   error.value = false
   try {
     const id = route.params.id
-    item.value = isDeal
-      ? await dealApi.get(id)
-      : await globalApi.get(id)
+    if (isDeal) {
+      item.value = await dealApi.get(id)
+    } else {
+      item.value = await globalApi.get(id)
+    }
   } catch {
     error.value = true
   } finally {
@@ -277,6 +290,23 @@ onMounted(fetchDetail)
   font-size: 0.95rem;
   color: var(--text-primary);
   padding: 8px 0;
+}
+
+.content-link {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 20px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s var(--ease-out);
+}
+
+.content-link:hover {
+  opacity: 0.85;
 }
 
 @media (max-width: 560px) {

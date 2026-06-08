@@ -34,18 +34,18 @@
       <template v-else>
         <div v-for="item in filteredItems" :key="item.id" class="feed-card" @click="goTo(item)">
           <div class="card-top">
-            <span :class="['lang-badge', `lang-${(item.lang || 'en').toLowerCase()}`]">
-              {{ item.lang || 'EN' }}
+            <span :class="['lang-badge', `lang-${(item.lang || item.original_lang || 'en').toLowerCase()}`]">
+              {{ item.lang || item.original_lang || 'EN' }}
             </span>
-            <span class="card-date" v-if="item.createdAt">{{ formatDate(item.createdAt) }}</span>
+            <span class="card-date" v-if="item.createdAt || item.created_at">{{ formatDate(item.createdAt || item.created_at) }}</span>
           </div>
 
           <div class="card-titles">
             <p class="original-title">{{ item.title || item.original_title }}</p>
-            <p class="cn-title">{{ item.title_cn || '翻译加载中...' }}</p>
+            <p class="cn-title">{{ item.title_cn || item.title || item.original_title || '' }}</p>
           </div>
 
-          <p class="card-summary">{{ item.summary_cn || '暂无中文摘要' }}</p>
+          <p class="card-summary">{{ item.summary_cn || item.summary || '...' }}</p>
 
           <div class="card-foot">
             <span v-if="item.category" class="card-cat">{{ item.category }}</span>

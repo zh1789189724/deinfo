@@ -5,6 +5,7 @@ const routes = [
   { path: '/global', component: () => import('@/views/Global.vue') },
   { path: '/deals', component: () => import('@/views/Deal.vue') },
   { path: '/deals/:id', component: () => import('@/views/Detail.vue'), props: true },
+  { path: '/global/:id', component: () => import('@/views/Detail.vue'), props: true },
   { path: '/opportunities', component: () => import('@/views/Opportunity.vue') },
   { path: '/tools', component: () => import('@/views/Tool.vue') },
   { path: '/feed', component: () => import('@/views/Feed.vue') },

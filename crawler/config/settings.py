@@ -13,7 +13,6 @@ ROBOTSTXT_OBEY = False
 CONCURRENT_REQUESTS = 8
 DOWNLOAD_DELAY = 1.0
 CONCURRENT_REQUESTS_PER_DOMAIN = 4
-CONCURRENT_REQUESTS_PER_IP = 4
 COOKIES_ENABLED = False
 
 # ── AutoThrottle 扩展 ──
@@ -63,6 +62,16 @@ DOWNLOAD_TIMEOUT = 30
 RETRY_ENABLED = True
 RETRY_TIMES = 3
 RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 429]
+
+# 禁用 Scrapy 内置代理
+HTTPPROXY_ENABLED = False
+
+# 系统代理配置
+import os
+_PROXY = os.environ.get('PROXY_URL') or 'http://127.0.0.1:7897'
+if _PROXY:
+    os.environ.setdefault('HTTPS_PROXY', _PROXY)
+    os.environ.setdefault('HTTP_PROXY', _PROXY)
 
 # ── 爬虫设置 ──
 DEPTH_LIMIT = 3

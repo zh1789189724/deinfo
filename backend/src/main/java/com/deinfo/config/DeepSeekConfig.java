@@ -2,6 +2,7 @@ package com.deinfo.config;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -26,7 +27,7 @@ public class DeepSeekConfig {
     @Bean
     public ObjectMapper deepSeekObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
-        // 忽略 JSON 中 Java 对象不存在的字段
+        mapper.registerModule(new JavaTimeModule());
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         return mapper;
     }

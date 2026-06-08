@@ -33,7 +33,9 @@ public class GlobalController {
         }
         wrapper.orderByDesc("created_at");
         Page<GlobalContent> pageParam = new Page<>(page, size);
-        return ResponseEntity.ok(PageResult.from(globalContentService.page(pageParam, wrapper)));
+        Page<GlobalContent> result = globalContentService.page(pageParam, wrapper);
+        result.getRecords().forEach(this::applyChineseTranslation);
+        return ResponseEntity.ok(PageResult.from(result));
     }
 
     @GetMapping("/{id}")
@@ -42,16 +44,26 @@ public class GlobalController {
         if (content == null) {
             return ResponseEntity.notFound().build();
         }
-        if (content.getContentCn() != null) {
+        applyChineseTranslation(content);
+        return ResponseEntity.ok(content);
+    }
+
+    /**
+     * 如果有中文翻译（titleCn / contentCn / summaryCn），
+     * 将原文替换为中文翻译返回给前端；
+     * 如果没有翻译，保持原文不变。
+     * 原始字段和中文翻译字段均保留在 entity 中，前端可自行选择显示哪个。
+     */
+    private void applyChineseTranslation(GlobalContent content) {
+        if (content.getTitleCn() != null && !content.getTitleCn().isEmpty()) {
+            content.setTitle(content.getTitleCn());
+        }
+        if (content.getContentCn() != null && !content.getContentCn().isEmpty()) {
             content.setContent(content.getContentCn());
         }
-        if (content.getSummaryCn() != null) {
+        if (content.getSummaryCn() != null && !content.getSummaryCn().isEmpty()) {
             content.setSummary(content.getSummaryCn());
         }
-        if (content.getTitleCn() != null && content.getTitleCn().isEmpty()) {
-            content.setTitle(null);
-        }
-        return ResponseEntity.ok(content);
     }
 
     @PostMapping

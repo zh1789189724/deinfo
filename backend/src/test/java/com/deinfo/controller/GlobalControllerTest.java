@@ -64,7 +64,7 @@ class GlobalControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/global/1 存在时返回")
+    @DisplayName("GET /api/global/1 存在时返回（有中文翻译时替换）")
     void getGlobalById_found() throws Exception {
         GlobalContent gc = createGlobal(1L, "Original");
         gc.setContentCn("中文内容");
@@ -72,7 +72,21 @@ class GlobalControllerTest {
 
         mockMvc.perform(get("/api/global/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value("Original"));
+                .andExpect(jsonPath("$.title").value("中文标题"));
+    }
+
+    @Test
+    @DisplayName("GET /api/global/2 无中文翻译时保留原文")
+    void getGlobalById_noTranslation() throws Exception {
+        GlobalContent gc = createGlobal(2L, "English Only Article");
+        gc.setTitleCn(null);
+        gc.setContentCn(null);
+        gc.setSummaryCn(null);
+        given(globalContentService.getById(2L)).willReturn(gc);
+
+        mockMvc.perform(get("/api/global/2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("English Only Article"));
     }
 
     @Test
