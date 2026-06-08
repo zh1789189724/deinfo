@@ -6,6 +6,11 @@ dist/
 .env
 .env.local
 backend/target/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+failed_queue.json
 backend/*.iml
 .idea/
 *.class
