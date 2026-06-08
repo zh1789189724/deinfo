@@ -11,6 +11,7 @@ __pycache__/
 *.pyo
 .pytest_cache/
 failed_queue.json
+/tests/
 backend/*.iml
 .idea/
 *.class
