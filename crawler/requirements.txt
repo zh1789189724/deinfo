@@ -1,0 +1,14 @@
+# 信息差发现平台 — 爬虫系统 依赖
+# 与接口契约第 10 章一致
+
+scrapy>=2.11
+apscheduler>=3.10
+requests>=2.31
+python-dotenv>=1.0
+parsel>=1.9
+Twisted>=22.10
+
+# 测试
+pytest>=7.0
+pytest-mock>=3.10
+pytest-cov>=4.0
