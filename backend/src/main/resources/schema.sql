@@ -125,3 +125,21 @@ CREATE TABLE `tool_item` (
     PRIMARY KEY (`id`),
     INDEX `idx_tag` (`tag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='好用网站/工具';
+
+-- 用户发帖表
+CREATE TABLE `post` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `content` TEXT COMMENT '文字内容',
+    `images` JSON DEFAULT NULL COMMENT '图片URL数组',
+    `link` VARCHAR(500) DEFAULT NULL COMMENT '外链',
+    `category` VARCHAR(30) DEFAULT '其他' COMMENT '分类',
+    `score` INT DEFAULT 0 COMMENT 'AI质量评分0-100',
+    `status` VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT '状态: pending/approved/rejected',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_user` (`user_id`),
+    INDEX `idx_status` (`status`),
+    INDEX `idx_created` (`created_at` DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户发帖';

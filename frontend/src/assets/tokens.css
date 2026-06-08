@@ -1,36 +1,42 @@
+/* ═══════════════════════════════════════════════════════════
+   DeInfo — Design System
+   Style: Minimal Modern
+   Color: Green (#10b981)
+   ═══════════════════════════════════════════════════════════ */
+
 :root {
   /* ── Surfaces ──────────────────────────── */
-  --bg-primary: #f6f5f2;
+  --bg-primary: #f8f9fa;
   --bg-secondary: #ffffff;
-  --bg-tertiary: #eeede9;
+  --bg-tertiary: #f1f3f5;
   --bg-elevated: #fff;
 
   /* ── Typography ────────────────────────── */
-  --text-primary: #1a1a1a;
-  --text-secondary: #5c5c5c;
-  --text-muted: #999;
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
   --text-inverse: #fff;
 
-  /* ── Accent ────────────────────────────── */
-  --accent: #e85d04;
-  --accent-hover: #d15202;
-  --accent-light: rgba(232, 93, 4, 0.08);
-  --accent-soft: rgba(232, 93, 4, 0.04);
+  /* ── Green Accent ──────────────────────── */
+  --accent: #10b981;
+  --accent-hover: #059669;
+  --accent-light: rgba(16, 185, 129, 0.10);
+  --accent-soft: rgba(16, 185, 129, 0.05);
 
   /* ── Borders ───────────────────────────── */
-  --border-color: #e5e3dd;
-  --border-light: #f0eeeb;
+  --border-color: #e4e4e7;
+  --border-light: #f0f0f2;
 
   /* ── Shadows ───────────────────────────── */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.08);
-  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.10);
 
   /* ── Radius ────────────────────────────── */
-  --radius: 12px;
-  --radius-sm: 8px;
-  --radius-lg: 16px;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
   --radius-full: 9999px;
 
   /* ── Motion ────────────────────────────── */
@@ -40,39 +46,39 @@
   --duration-slow: 400ms;
 
   /* ── Score colors ──────────────────────── */
-  --score-high: #0f9d58;
-  --score-mid: #f4b400;
-  --score-low: #ea4335;
+  --score-high: #10b981;
+  --score-mid: #f59e0b;
+  --score-low: #ef4444;
 
   /* ── Font families ─────────────────────── */
-  --font-sans: -apple-system, 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
-  --font-serif: 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', Georgia, serif;
+  --font-sans: 'Public Sans', -apple-system, 'PingFang SC', 'Noto Sans SC', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
 }
 
 /* ── Dark mode ───────────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-primary: #111;
-    --bg-secondary: #1a1a1a;
-    --bg-tertiary: #222;
-    --bg-elevated: #1c1c1c;
-    --text-primary: #eee;
-    --text-secondary: #999;
-    --text-muted: #666;
-    --border-color: #2a2a2a;
-    --border-light: #222;
-    --accent: #f97316;
-    --accent-hover: #fb923c;
-    --accent-light: rgba(249, 115, 22, 0.12);
-    --accent-soft: rgba(249, 115, 22, 0.06);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.5);
+    --bg-primary: #0a0a0b;
+    --bg-secondary: #141416;
+    --bg-tertiary: #1c1c1e;
+    --bg-elevated: #18181a;
+    --text-primary: #e8e8ea;
+    --text-secondary: #9f9fa6;
+    --text-muted: #5c5c63;
+    --accent: #34d399;
+    --accent-hover: #6ee7b7;
+    --accent-light: rgba(52, 211, 153, 0.12);
+    --accent-soft: rgba(52, 211, 153, 0.06);
+    --border-color: #27272a;
+    --border-light: #1f1f22;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
     --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
   }
 }
 
-/* ── Element Plus overrides ──────────────── */
+/* ── Base ─────────────────────────────────── */
 html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
@@ -91,7 +97,7 @@ html.dark {
   --el-fill-color-light: var(--bg-tertiary);
   --el-color-primary: var(--accent);
   --el-color-primary-light-3: var(--accent-hover);
-  --el-color-primary-dark-2: #d15202;
+  --el-color-primary-dark-2: #047857;
 }
 
 *, *::before, *::after {
@@ -105,6 +111,8 @@ body {
   color: var(--text-primary);
   background: var(--bg-primary);
   line-height: 1.6;
+  font-weight: 400;
+  font-size: 0.9375rem;
 }
 
 a { color: inherit; text-decoration: none; }

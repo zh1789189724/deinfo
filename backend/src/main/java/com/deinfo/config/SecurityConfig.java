@@ -51,6 +51,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/opportunities/**").permitAll()
                 .requestMatchers("/api/submit").permitAll()
                 .requestMatchers("/api/submit/**").permitAll()
+                .requestMatchers("/api/posts/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )

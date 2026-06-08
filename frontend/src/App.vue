@@ -12,8 +12,8 @@
             </svg>
           </span>
           <span class="masthead-text">
-            <span class="masthead-title">信息差</span>
-            <span class="masthead-sub">发现平台</span>
+            <span class="masthead-title">DeInfo</span>
+            <span class="masthead-sub">信息差发现</span>
           </span>
         </router-link>
 
@@ -64,8 +64,8 @@
     <footer class="app-footer">
       <div class="footer-inner">
         <div class="footer-brand">
-          <span class="footer-title">信息差发现</span>
-          <p class="footer-desc">把好东西分享给还接触不到的人</p>
+          <span class="footer-title">DeInfo</span>
+          <p class="footer-desc">跨越语言、地域、信息圈层 — 发现你不知道的信息差</p>
         </div>
         <div class="footer-links">
           <router-link v-for="item in navItems" :key="item.path" :to="item.path" class="footer-link">
@@ -82,19 +82,31 @@
     <transition name="overlay">
       <div v-if="showLogin" class="login-overlay" @click.self="showLogin = false">
         <div class="login-card">
-          <button class="login-close" @click="showLogin = false">&times;</button>
+          <button class="login-close" @click="showLogin = false">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M4 4l10 10M14 4l-10 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <div class="login-brand">
+            <svg width="32" height="32" viewBox="0 0 28 28" fill="none">
+              <rect x="3" y="3" width="22" height="22" rx="6" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M14 8v12M8 14h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <circle cx="14" cy="14" r="2" fill="currentColor"/>
+            </svg>
+          </div>
           <h2 class="login-title">欢迎回来</h2>
           <p class="login-sub">登录后即可爆料和管理内容</p>
           <form @submit.prevent="handleLogin" class="login-form">
             <label class="login-field">
               <span>用户名</span>
-              <input v-model="loginForm.username" type="text" autocomplete="username" required />
+              <input v-model="loginForm.username" type="text" placeholder="请输入用户名" autocomplete="username" required />
             </label>
             <label class="login-field">
               <span>密码</span>
-              <input v-model="loginForm.password" type="password" autocomplete="current-password" required />
+              <input v-model="loginForm.password" type="password" placeholder="请输入密码" autocomplete="current-password" required />
             </label>
             <button type="submit" class="btn-submit" :disabled="loading">
+              <span v-if="loading" class="btn-loading"></span>
               {{ loading ? '登录中…' : '登录' }}
             </button>
           </form>
@@ -123,6 +135,7 @@ const navItems = [
   { path: '/', label: '首页' },
   { path: '/global', label: '海外精选' },
   { path: '/deals', label: '优惠' },
+  { path: '/feed', label: '广场' },
   { path: '/opportunities', label: '投资机会' },
   { path: '/tools', label: '工具站' },
   { path: '/submit', label: '爆料' },
@@ -229,15 +242,15 @@ const handleCommand = (cmd) => {
 }
 
 .masthead-title {
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 800;
-  letter-spacing: 0.03em;
+  letter-spacing: -0.02em;
 }
 
 .masthead-sub {
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.25em;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
   color: var(--text-muted);
   text-transform: uppercase;
 }
@@ -421,32 +434,32 @@ const handleCommand = (cmd) => {
   align-items: center;
   justify-content: center;
   background: color-mix(in srgb, var(--bg-primary) 60%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .login-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  padding: 40px;
-  width: 380px;
+  padding: 40px 36px 36px;
+  width: 370px;
   position: relative;
   box-shadow: var(--shadow-xl);
+  text-align: center;
 }
 
 .login-close {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 14px;
+  right: 14px;
   background: none;
   border: none;
-  font-size: 22px;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 6px;
   border-radius: 6px;
-  line-height: 1;
+  display: flex;
   transition: all 0.15s var(--ease-out);
 }
 .login-close:hover {
@@ -454,15 +467,21 @@ const handleCommand = (cmd) => {
   color: var(--text-primary);
 }
 
+.login-brand {
+  display: inline-flex;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
 .login-title {
-  font-size: 22px;
+  font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 6px;
   color: var(--text-primary);
 }
 
 .login-sub {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-muted);
   margin-bottom: 28px;
 }
@@ -470,31 +489,36 @@ const handleCommand = (cmd) => {
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
+  text-align: left;
 }
 
 .login-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .login-field span {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-secondary);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
 }
 
 .login-field input {
   padding: 10px 14px;
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 0.875rem;
   background: transparent;
   color: var(--text-primary);
   outline: none;
   transition: border-color 0.2s var(--ease-out);
+}
+.login-field input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
 }
 .login-field input:focus {
   border-color: var(--accent);
@@ -506,13 +530,31 @@ const handleCommand = (cmd) => {
   color: #fff;
   border: none;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s var(--ease-out);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 4px;
 }
 .btn-submit:hover { background: var(--accent-hover); }
 .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-loading {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
 .overlay-enter-active, .overlay-leave-active {
   transition: opacity 0.2s ease;

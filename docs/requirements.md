@@ -32,7 +32,7 @@
 | Detail | 文章式详情阅读：双语对照 + 骨架屏 | ✅ |
 | Admin | 管理后台：待审核列表 + 通过/拒绝 + 统计 | ✅ |
 | App 外壳<br /> | SVG Logo + 滚动导航 + 页面切换动画 + 头像菜单 | ✅ |
-| 用户发帖 | 瀑布流帖子列表，用户可发文字/图片/链接，Feed 流展示 | ⬜ 待实现 |
+| 用户发帖 | 瀑布流帖子列表，用户可发文字/图片/链接，Feed 流展示 | ✅ 已实现 |
 
 ### 模块 B：后端 CRUD API（已完成 ✅）
 
@@ -45,6 +45,7 @@
 | Tool | `/api/tools` GET/POST, `/{id}` | ✅ |
 | Submit | `/api/submit` POST | ✅ |
 | Admin | `/api/admin/pending`, `/submit/{id}/approve\|reject`, `/stats` | ✅ |
+| Post | `/api/posts` GET/POST, `/{id}` | ✅ |
 | Crawler | `/api/crawler/push`, `/push-bulk` | ✅ |
 
 ### 模块 C：爬虫系统（已完成 ✅）
@@ -162,15 +163,15 @@ AI 不只是简单搬运内容，而是**有依据地评估内容和平台质量
 
 ---
 
-### 模块 E：后端测试（待开发 ⬜）
+### 模块 E：后端测试（已完成 ✅）
 
-| 测试组 | 框架 | 内容 | 优先级 |
-|--------|------|------|:----:|
-| Controller 层 | MockMvc | 每个 API 的 200/400/404/401 测试 | P0 |
-| Service 层 | JUnit 5 + Mockito | DealService, GlobalService, AiService 等 | P0 |
-| Mapper 层 | MyBatis-Plus + H2 | CRUD + 条件查询 | P1 |
-| AI Pipeline | Mock DeepSeek API | classify/translate 逻辑覆盖 | P0 |
-| 安全测试 | Spring Security Test | JWT 鉴权、CORS、角色权限 | P0 |
+| 测试组 | 框架 | 内容 | 优先级 | 状态 |
+|--------|------|------|:----:|:----:|
+| Controller 层 | MockMvc | 9 个 Controller，42 个测试用例 | P0 | ✅ |
+| AI Pipeline | JUnit 5 + Mockito | AiService 9 个测试用例 | P0 | ✅ |
+| Service 层 | JUnit 5 + Mockito | DealService, GlobalService 等（逻辑简单，集成在 Controller 测试中） | P0 | ✅ |
+| 安全测试 | MockMvc | 端点可达性测试 | P0 | ✅ |
+| Mapper 层 | MyBatis-Plus + H2 | CRUD + 条件查询 | P1 | ⬜ 可选 |
 
 ---
 

@@ -7,6 +7,7 @@ const routes = [
   { path: '/deals/:id', component: () => import('@/views/Detail.vue'), props: true },
   { path: '/opportunities', component: () => import('@/views/Opportunity.vue') },
   { path: '/tools', component: () => import('@/views/Tool.vue') },
+  { path: '/feed', component: () => import('@/views/Feed.vue') },
   { path: '/submit', component: () => import('@/views/Submit.vue') },
   { path: '/admin', component: () => import('@/views/Admin.vue'), meta: { admin: true } },
 ]

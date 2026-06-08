@@ -53,6 +53,11 @@ vi.mock('@/api', () => {
       reject: vi.fn().mockResolvedValue({}),
       stats: vi.fn().mockResolvedValue({ pending: 0, total: 0, today: 0 }),
     },
+    postApi: {
+      list: vi.fn().mockResolvedValue({ data: [], total: 0 }),
+      get: vi.fn().mockResolvedValue({}),
+      create: vi.fn().mockResolvedValue({}),
+    },
   }
 })
 

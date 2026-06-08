@@ -150,7 +150,7 @@ async function onSubmit() {
   padding: 64px 24px;
   text-align: center;
   overflow: hidden;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 40%, #047857 100%);
 }
 
 .hero-shapes {
@@ -168,7 +168,7 @@ async function onSubmit() {
 
 .s1 {
   width: 400px; height: 400px;
-  background: var(--accent, #f97316);
+  background: var(--accent);
   top: -100px; right: -80px;
 }
 
@@ -180,7 +180,7 @@ async function onSubmit() {
 
 .s3 {
   width: 180px; height: 180px;
-  background: var(--accent, #f97316);
+  background: var(--accent);
   bottom: 20%; right: 15%;
 }
 

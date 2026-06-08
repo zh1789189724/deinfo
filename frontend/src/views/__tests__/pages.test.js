@@ -335,6 +335,37 @@ describe('Tool.vue', () => {
 })
 
 // ══════════════════════════════════════════════
+// Feed.vue
+// ══════════════════════════════════════════════
+describe('Feed.vue', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    api.postApi.list.mockResolvedValue({ data: [{ id: 1, content: '测试帖子', createdAt: '2026-06-08T10:00:00Z' }], total: 1 })
+  })
+
+  it('renders page header', async () => {
+    const Feed = (await import('@/views/Feed.vue')).default
+    const wrapper = createWrapper(Feed)
+    expect(wrapper.text()).toContain('发现广场')
+  })
+
+  it('displays posts from API', async () => {
+    const Feed = (await import('@/views/Feed.vue')).default
+    const wrapper = createWrapper(Feed)
+    await flush()
+    expect(wrapper.text()).toContain('测试帖子')
+  })
+
+  it('shows empty state when no posts', async () => {
+    api.postApi.list.mockResolvedValue({ data: [], total: 0 })
+    const Feed = (await import('@/views/Feed.vue')).default
+    const wrapper = createWrapper(Feed)
+    await flush()
+    expect(wrapper.text()).toContain('还没有人发帖')
+  })
+})
+
+// ══════════════════════════════════════════════
 // Submit.vue
 // ══════════════════════════════════════════════
 describe('Submit.vue', () => {

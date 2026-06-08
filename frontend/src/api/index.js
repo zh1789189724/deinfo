@@ -49,3 +49,9 @@ export const adminApi = {
   reject: (id, reason) => http.put(`/admin/submit/${id}/reject`, { reason }),
   stats: () => http.get('/admin/stats'),
 }
+
+export const postApi = {
+  list: (page = 1, size = 20, category) => http.get('/posts', { params: { page, size, category } }),
+  get: (id) => http.get(`/posts/${id}`),
+  create: (data) => http.post('/posts', data),
+}
