@@ -42,7 +42,7 @@
 
           <div class="card-titles">
             <p class="original-title">{{ item.title || item.original_title }}</p>
-            <p class="cn-title">{{ item.title_cn || item.title || item.original_title || '' }}</p>
+            <p class="cn-title" v-if="item.title_cn">{{ item.title_cn }}</p>
           </div>
 
           <p class="card-summary">{{ item.summary_cn || item.summary || '...' }}</p>
@@ -281,7 +281,7 @@ onMounted(loadItems)
   line-height: 1.5;
   margin-bottom: 14px;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

@@ -33,6 +33,7 @@ except ImportError:
     pass
 
 import requests
+import trafilatura
 
 from crawler.items import CrawlerItem
 from crawler.pipelines import CrawlerPipeline
@@ -53,6 +54,30 @@ DEFAULT_UA = (
     "AppleWebKit/537.36 (KHTML, like Gecko) "
     "Chrome/125.0.0.0 Safari/537.36"
 )
+
+
+def extract_content(url: str, fallback_text: str, max_chars: int = 1000) -> str:
+    """尝试用 trafilatura 从 URL 提取正文
+
+    如果提取失败或正文太短，返回 fallback_text。
+
+    Args:
+        url: 目标文章链接
+        fallback_text: 兜底文本（通常是标题）
+        max_chars: 截取前 N 个字符，默认 1000
+
+    Returns:
+        提取的正文文本或 fallback_text
+    """
+    try:
+        downloaded = trafilatura.fetch_url(url)
+        if downloaded:
+            text = trafilatura.extract(downloaded, include_comments=False, include_tables=False)
+            if text and len(text.strip()) > 50:
+                return text[:max_chars]
+    except Exception as e:
+        logger.warning("正文提取失败 %s: %s", url, e)
+    return fallback_text
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -85,7 +110,7 @@ def scrape_hackernews() -> list[CrawlerItem]:
                 source_name="hackernews",
                 lang="en",
                 title=title,
-                content=title,
+                content=extract_content(href, title),
                 original_url=href,
             )
             cleaned = pipeline.process_item(item, type("spider", (), {"name": "hackernews"})())

@@ -40,32 +40,39 @@
               {{ item.score }}
             </span>
             <a
-              v-if="item.sourceInfo || item.original_url"
-              :href="item.sourceInfo || item.original_url"
+              v-if="item.original_url"
+              :href="item.original_url"
               target="_blank"
               class="article-source"
             >
-              来源
+              原文
             </a>
           </div>
-          <h1 class="article-title">{{ item.title_cn || item.title || item.original_title || '' }}</h1>
+          <h1 class="article-title">{{ item.title_cn || item.title || '' }}</h1>
+          <!-- 摘要行 -->
+          <p class="article-summary" v-if="item.summary_cn || item.summary">
+            {{ item.summary_cn || item.summary }}
+          </p>
         </header>
 
         <div class="article-body">
-          <div v-if="item.category === 'opportunity'" class="bilingual">
+          <!-- 全球内容：双语对照 -->
+          <template v-if="isGlobal && item.content">
             <div class="bilingual-section">
-              <h3 class="section-label">原始内容</h3>
-              <p class="section-text">{{ item.originalContent || item.content }}</p>
+              <h3 class="section-label">原文</h3>
+              <div class="section-text">{{ item.content }}</div>
             </div>
-            <div class="bilingual-section translated">
+            <div v-if="item.content_cn && item.content_cn !== item.content" class="bilingual-section translated">
               <h3 class="section-label">中文翻译</h3>
-              <p class="section-text">{{ item.content }}</p>
+              <div class="section-text">{{ item.content_cn }}</div>
             </div>
-          </div>
+          </template>
+          <!-- 非全球内容 -->
           <div v-else-if="item.content" class="content-text">
             {{ item.content }}
           </div>
-          <div v-else class="content-text">
+          <!-- 无内容时 -->
+          <div v-else class="empty-content">
             <p>暂无详情内容</p>
             <a
               v-if="item.original_url"
@@ -252,6 +259,13 @@ onMounted(fetchDetail)
   color: var(--text-primary);
 }
 
+.article-summary {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
 /* ── Body ─────────────────────────────────── */
 .article-body {
   padding: 0 32px 32px;
@@ -307,6 +321,17 @@ onMounted(fetchDetail)
 
 .content-link:hover {
   opacity: 0.85;
+}
+
+.empty-content {
+  text-align: center;
+  padding: 48px 16px;
+}
+
+.empty-content p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 16px;
 }
 
 @media (max-width: 560px) {

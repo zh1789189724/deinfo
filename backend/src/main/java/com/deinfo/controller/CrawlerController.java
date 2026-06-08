@@ -39,6 +39,9 @@ public class CrawlerController {
             if ("domestic".equals(sourceType)) {
                 // Domestic sources: classify only
                 Deal deal = contentService.processAndSave(contentData);
+                if (deal == null) {
+                    return ResponseEntity.ok(Map.of("status", "duplicate"));
+                }
                 return ResponseEntity.ok(Map.of(
                     "type", "domestic",
                     "deal", deal
@@ -46,6 +49,9 @@ public class CrawlerController {
             } else {
                 // Overseas sources: classify + translate
                 GlobalContent gc = globalService.processAndSave(contentData);
+                if (gc == null) {
+                    return ResponseEntity.ok(Map.of("status", "duplicate"));
+                }
                 return ResponseEntity.ok(Map.of(
                     "type", "overseas",
                     "content", gc

@@ -6,6 +6,7 @@ apscheduler>=3.10
 requests>=2.31
 python-dotenv>=1.0
 parsel>=1.9
+trafilatura>=2.1
 Twisted>=22.10
 
 # 测试
