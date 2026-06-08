@@ -22,35 +22,36 @@ vi.mock('element-plus/theme-chalk/el-message.css', () => ({}))
 vi.mock('element-plus/theme-chalk/el-divider.css', () => ({}))
 vi.mock('element-plus/theme-chalk/el-icon.css', () => ({}))
 vi.mock('@/api', () => {
-  const mockData = (data) => ({ data, total: data.length })
+  const mockPage = () => ({ data: [], total: 0 })
 
   return {
     authApi: {
       login: vi.fn().mockResolvedValue({ token: 'test-token', role: 'ADMIN', username: 'admin' }),
     },
     dealApi: {
-      list: vi.fn().mockResolvedValue(mockData([])),
+      list: vi.fn().mockResolvedValue(mockPage()),
       get: vi.fn().mockResolvedValue({ id: 1, title: 'Test Deal', content: 'detail' }),
-      top: vi.fn().mockResolvedValue(mockData([])),
+      top: vi.fn().mockResolvedValue([]),
     },
     globalApi: {
-      list: vi.fn().mockResolvedValue(mockData([])),
+      list: vi.fn().mockResolvedValue(mockPage()),
       get: vi.fn().mockResolvedValue({ id: 1, title: 'Test Global', content: 'detail' }),
-      top: vi.fn().mockResolvedValue(mockData([])),
+      top: vi.fn().mockResolvedValue([]),
     },
     opportunityApi: {
-      list: vi.fn().mockResolvedValue(mockData([])),
+      list: vi.fn().mockResolvedValue(mockPage()),
     },
     toolApi: {
-      list: vi.fn().mockResolvedValue(mockData([])),
+      list: vi.fn().mockResolvedValue(mockPage()),
     },
     submitApi: {
       create: vi.fn().mockResolvedValue({ id: 1 }),
     },
     adminApi: {
-      pending: vi.fn().mockResolvedValue(mockData([])),
+      pending: vi.fn().mockResolvedValue([]),
       approve: vi.fn().mockResolvedValue({}),
       reject: vi.fn().mockResolvedValue({}),
+      stats: vi.fn().mockResolvedValue({ pending: 0, total: 0, today: 0 }),
     },
   }
 })

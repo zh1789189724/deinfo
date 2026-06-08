@@ -102,15 +102,20 @@ async function fetchPending() {
   loading.value = true
   try {
     const res = await adminApi.pending()
-    list.value = res.data?.list || res.data || []
-    stats.value.pending = list.value.length
-    // Note: total and today require a dedicated stats endpoint for accuracy
-    stats.value.total = stats.value.total || 0
-    stats.value.today = stats.value.today || 0
+    list.value = Array.isArray(res) ? res : res.data?.list || res.data || []
   } catch {
     list.value = []
   } finally {
     loading.value = false
+  }
+}
+
+async function fetchStats() {
+  try {
+    const res = await adminApi.stats()
+    stats.value = res || stats.value
+  } catch (e) {
+    console.error('[Admin] Failed to load stats:', e)
   }
 }
 
@@ -148,7 +153,10 @@ async function submitReject() {
   }
 }
 
-onMounted(fetchPending)
+onMounted(() => {
+  fetchPending()
+  fetchStats()
+})
 </script>
 
 <style scoped>

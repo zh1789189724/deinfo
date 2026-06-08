@@ -87,8 +87,8 @@ async function fetchList() {
     const params = { page: page.value, size: size.value }
     if (tag.value) params.tag = tag.value
     const res = await toolApi.list(params.page, params.size, params.tag)
-    list.value = res.data?.list || res.data || []
-    total.value = res.data?.total || list.value.length
+    list.value = res.data || res || []
+    total.value = res.total ?? list.value.length
     const allTags = new Set()
     list.value.forEach((item) => parseTags(item.tags).forEach((t) => allTags.add(t)))
     tags.value = [...allTags]

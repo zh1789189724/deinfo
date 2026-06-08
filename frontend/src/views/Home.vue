@@ -145,13 +145,13 @@ const loadData = async () => {
       const list = res.data || res
       list.forEach((item) => (item._source = 'deals'))
       items.value = list
-      total.value = res.total ?? res.data?.total ?? items.value.length
+      total.value = res.total ?? list.length
     } else if (activeTab.value === 'global') {
       const res = await globalApi.list(page.value, pageSize.value)
       const list = res.data || res
       list.forEach((item) => (item._source = 'global'))
       items.value = list
-      total.value = res.total ?? res.data?.total ?? items.value.length
+      total.value = res.total ?? list.length
     } else {
       const [dealsRes, globalRes] = await Promise.all([
         dealApi.top(),

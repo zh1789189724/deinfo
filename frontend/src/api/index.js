@@ -6,7 +6,7 @@ export const authApi = {
 }
 
 export const dealApi = {
-  list: (page = 1, size = 20) => http.get('/deals', { params: { page, size } }),
+  list: (page = 1, size = 20, keyword = '', category = '') => http.get('/deals', { params: { page, size, keyword, category } }),
   get: (id) => http.get(`/deals/${id}`),
   top: () => http.get('/deals/top'),
   create: (data) => http.post('/deals', data),
@@ -46,5 +46,6 @@ export const submitApi = {
 export const adminApi = {
   pending: () => http.get('/admin/pending'),
   approve: (id) => http.put(`/admin/submit/${id}/approve`),
-  reject: (id, reason) => http.put(`/admin/submit/${id}/reject`, { rejectReason: reason }),
+  reject: (id, reason) => http.put(`/admin/submit/${id}/reject`, { reason }),
+  stats: () => http.get('/admin/stats'),
 }

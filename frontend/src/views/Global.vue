@@ -112,8 +112,8 @@ const loadItems = async () => {
   loading.value = true
   try {
     const res = await globalApi.list(page.value, pageSize.value)
-    items.value = res.data || res
-    total.value = res.total ?? res.data?.total ?? items.value.length
+    items.value = res.data || res || []
+    total.value = res.total ?? items.value.length
   } catch (e) {
     console.error('[Global] Failed to load:', e)
     items.value = []

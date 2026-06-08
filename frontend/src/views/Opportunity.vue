@@ -87,8 +87,8 @@ async function fetchList() {
   loading.value = true
   try {
     const res = await opportunityApi.list(page.value, size.value)
-    list.value = res.data?.list || res.data || []
-    total.value = res.data?.total || list.value.length
+    list.value = res.data || res || []
+    total.value = res.total ?? list.value.length
   } catch (e) {
     console.error('[Opportunity] Failed to load:', e)
     list.value = []

@@ -1,12 +1,12 @@
 package com.deinfo.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.deinfo.dto.PageResult;
 import com.deinfo.entity.ToolItem;
 import com.deinfo.service.ToolItemService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/tools")
@@ -19,7 +19,7 @@ public class ToolController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ToolItem>> list(
+    public ResponseEntity<PageResult<ToolItem>> list(
             @RequestParam(required = false) String tag,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -28,10 +28,8 @@ public class ToolController {
             wrapper.eq("tag", tag);
         }
         wrapper.orderByDesc("created_at");
-        List<ToolItem> all = toolItemService.list(wrapper);
-        int start = Math.min((page - 1) * size, all.size());
-        int end = Math.min(start + size, all.size());
-        return ResponseEntity.ok(all.subList(start, end));
+        Page<ToolItem> pageParam = new Page<>(page, size);
+        return ResponseEntity.ok(PageResult.from(toolItemService.page(pageParam, wrapper)));
     }
 
     @GetMapping("/{id}")

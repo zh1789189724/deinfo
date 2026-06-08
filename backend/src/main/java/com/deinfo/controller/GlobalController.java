@@ -2,6 +2,7 @@ package com.deinfo.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.deinfo.dto.PageResult;
 import com.deinfo.entity.GlobalContent;
 import com.deinfo.service.GlobalContentService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ public class GlobalController {
     private final GlobalContentService globalContentService;
 
     @GetMapping
-    public ResponseEntity<List<GlobalContent>> list(
+    public ResponseEntity<PageResult<GlobalContent>> list(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "1") int page,
@@ -32,7 +33,7 @@ public class GlobalController {
         }
         wrapper.orderByDesc("created_at");
         Page<GlobalContent> pageParam = new Page<>(page, size);
-        return ResponseEntity.ok(globalContentService.page(pageParam, wrapper).getRecords());
+        return ResponseEntity.ok(PageResult.from(globalContentService.page(pageParam, wrapper)));
     }
 
     @GetMapping("/{id}")
@@ -79,8 +80,7 @@ public class GlobalController {
     }
 
     @GetMapping("/top")
-    public ResponseEntity<List<GlobalContent>> top(
-            @RequestParam(defaultValue = "10") int limit) {
+    public ResponseEntity<List<GlobalContent>> top(@RequestParam(defaultValue = "10") int limit) {
         QueryWrapper<GlobalContent> wrapper = new QueryWrapper<>();
         wrapper.orderByDesc("score").last("LIMIT " + limit);
         return ResponseEntity.ok(globalContentService.list(wrapper));

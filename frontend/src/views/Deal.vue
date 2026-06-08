@@ -110,22 +110,9 @@ const scoreClass = (score) => {
 const loadDeals = async () => {
   loading.value = true
   try {
-    const res = await dealApi.list(page.value, pageSize.value)
-    let list = res.data || res
-    if (keyword.value) {
-      const kw = keyword.value.toLowerCase()
-      list = list.filter(
-        (d) =>
-          (d.title || '').toLowerCase().includes(kw) ||
-          (d.summary || '').toLowerCase().includes(kw)
-      )
-    }
-    if (category.value) {
-      list = list.filter((d) => d.category === category.value)
-    }
-    list.sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
-    deals.value = list
-    total.value = res.total ?? res.data?.total ?? list.length
+    const res = await dealApi.list(page.value, pageSize.value, keyword.value, category.value)
+    deals.value = res.data || res || []
+    total.value = res.total ?? deals.value.length
   } catch (e) {
     console.error('[Deal] Failed to load:', e)
     deals.value = []

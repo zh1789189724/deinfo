@@ -1,13 +1,12 @@
 package com.deinfo.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.deinfo.dto.PageResult;
 import com.deinfo.entity.Opportunity;
 import com.deinfo.service.OpportunityService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/opportunities")
@@ -20,7 +19,7 @@ public class OpportunityController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Opportunity>> list(
+    public ResponseEntity<PageResult<Opportunity>> list(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "1") int page,
@@ -33,10 +32,8 @@ public class OpportunityController {
             wrapper.eq("status", status);
         }
         wrapper.orderByDesc("created_at");
-        List<Opportunity> all = opportunityService.list(wrapper);
-        int start = Math.min((page - 1) * size, all.size());
-        int end = Math.min(start + size, all.size());
-        return ResponseEntity.ok(all.subList(start, end));
+        Page<Opportunity> pageParam = new Page<>(page, size);
+        return ResponseEntity.ok(PageResult.from(opportunityService.page(pageParam, wrapper)));
     }
 
     @GetMapping("/{id}")

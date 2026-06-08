@@ -47,13 +47,9 @@ async function flush() {
 describe('Home.vue', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Mock top API to return data
-    api.dealApi.top.mockResolvedValue({
-      data: [makeDeal({ id: 1, score: 90 }), makeDeal({ id: 2, score: 80 })],
-    })
-    api.globalApi.top.mockResolvedValue({
-      data: [makeGlobal({ id: 3 }), makeGlobal({ id: 4 })],
-    })
+    // Mock top API to return bare arrays (consistent with backend)
+    api.dealApi.top.mockResolvedValue([makeDeal({ id: 1, score: 90 }), makeDeal({ id: 2, score: 80 })])
+    api.globalApi.top.mockResolvedValue([makeGlobal({ id: 3 }), makeGlobal({ id: 4 })])
   })
 
   it('renders hero section with title and stats', async () => {
@@ -84,8 +80,8 @@ describe('Home.vue', () => {
   })
 
   it('shows empty state when no data', async () => {
-    api.dealApi.top.mockResolvedValue({ data: [] })
-    api.globalApi.top.mockResolvedValue({ data: [] })
+    api.dealApi.top.mockResolvedValue([])
+    api.globalApi.top.mockResolvedValue([])
     const Home = (await import('@/views/Home.vue')).default
     const wrapper = createWrapper(Home)
     await flush()
@@ -240,14 +236,12 @@ describe('Opportunity.vue', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     api.opportunityApi.list.mockResolvedValue({
-      data: {
-        list: [
-          makeOpportunity({ id: 1, category: '投资', status: '进行中' }),
-          makeOpportunity({ id: 2, category: '租房', status: '已结束' }),
-          makeOpportunity({ id: 3, category: '兼职', status: '待审核' }),
-        ],
-        total: 3,
-      },
+      data: [
+        makeOpportunity({ id: 1, category: '投资', status: '进行中' }),
+        makeOpportunity({ id: 2, category: '租房', status: '已结束' }),
+        makeOpportunity({ id: 3, category: '兼职', status: '待审核' }),
+      ],
+      total: 3,
     })
   })
 
@@ -270,7 +264,7 @@ describe('Opportunity.vue', () => {
   })
 
   it('shows empty state when no data', async () => {
-    api.opportunityApi.list.mockResolvedValue({ data: { list: [], total: 0 } })
+    api.opportunityApi.list.mockResolvedValue({ data: [], total: 0 })
     const Opp = (await import('@/views/Opportunity.vue')).default
     const wrapper = createWrapper(Opp)
     await flush()
@@ -298,7 +292,8 @@ describe('Tool.vue', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     api.toolApi.list.mockResolvedValue({
-      data: { list: [makeTool({ id: 1 }), makeTool({ id: 2, name: 'Another Tool' })], total: 2 },
+      data: [makeTool({ id: 1 }), makeTool({ id: 2, name: 'Another Tool' })],
+      total: 2,
     })
   })
 
@@ -320,7 +315,7 @@ describe('Tool.vue', () => {
   })
 
   it('shows empty state when no tools', async () => {
-    api.toolApi.list.mockResolvedValue({ data: { list: [], total: 0 } })
+    api.toolApi.list.mockResolvedValue({ data: [], total: 0 })
     const Tool = (await import('@/views/Tool.vue')).default
     const wrapper = createWrapper(Tool)
     await flush()
@@ -413,16 +408,11 @@ describe('Admin.vue', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
-    // Mock adminApi.pending
-    api.adminApi.pending.mockResolvedValue({
-      data: {
-        list: [
-          { id: 1, title: '待审核内容', category: 'deal', status: 'pending' },
-          { id: 2, title: '已通过内容', category: 'info', status: 'approved' },
-        ],
-        total: 2,
-      },
-    })
+    // Mock adminApi.pending returns bare array
+    api.adminApi.pending.mockResolvedValue([
+      { id: 1, title: '待审核内容', category: 'deal', status: 'pending' },
+      { id: 2, title: '已通过内容', category: 'info', status: 'approved' },
+    ])
   })
 
   it('shows no-access for non-admin users', async () => {
@@ -435,8 +425,8 @@ describe('Admin.vue', () => {
     localStorage.setItem('role', 'ADMIN')
     localStorage.setItem('token', 'test-token')
     localStorage.setItem('username', 'admin')
-    // Return empty data to avoid table row rendering
-    api.adminApi.pending.mockResolvedValue({ data: { list: [], total: 0 } })
+    // Return empty array to avoid table row rendering
+    api.adminApi.pending.mockResolvedValue([])
 
     const Admin = (await import('@/views/Admin.vue')).default
     const wrapper = createWrapper(Admin)

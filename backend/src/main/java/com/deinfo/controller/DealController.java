@@ -2,6 +2,7 @@ package com.deinfo.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.deinfo.dto.PageResult;
 import com.deinfo.entity.Deal;
 import com.deinfo.service.DealService;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +19,17 @@ public class DealController {
     private final DealService dealService;
 
     @GetMapping
-    public ResponseEntity<List<Deal>> list(
+    public ResponseEntity<PageResult<Deal>> list(
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String location,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
         QueryWrapper<Deal> wrapper = new QueryWrapper<>();
+        if (keyword != null && !keyword.isEmpty()) {
+            wrapper.like("title", keyword).or().like("summary", keyword);
+        }
         if (category != null && !category.isEmpty()) {
             wrapper.eq("category", category);
         }
@@ -36,7 +41,7 @@ public class DealController {
         }
         wrapper.orderByDesc("created_at");
         Page<Deal> pageParam = new Page<>(page, size);
-        return ResponseEntity.ok(dealService.page(pageParam, wrapper).getRecords());
+        return ResponseEntity.ok(PageResult.from(dealService.page(pageParam, wrapper)));
     }
 
     @GetMapping("/{id}")
@@ -74,8 +79,7 @@ public class DealController {
     }
 
     @GetMapping("/top")
-    public ResponseEntity<List<Deal>> top(
-            @RequestParam(defaultValue = "10") int limit) {
+    public ResponseEntity<List<Deal>> top(@RequestParam(defaultValue = "10") int limit) {
         QueryWrapper<Deal> wrapper = new QueryWrapper<>();
         wrapper.orderByDesc("score").last("LIMIT " + limit);
         return ResponseEntity.ok(dealService.list(wrapper));
