@@ -14,11 +14,13 @@ from __future__ import annotations
 
 import argparse
 import html as html_mod
+import json
 import logging
 import os
 import re
 import sys
 import time
+import xml.etree.ElementTree as ET
 from datetime import datetime
 
 # ── 路径设置 ──
@@ -81,7 +83,7 @@ def extract_content(url: str, fallback_text: str, max_chars: int = 1000) -> str:
 
 
 # ═══════════════════════════════════════════════════════════════
-# 各源采集函数（从 quick_scrape.py 复制已验证的代码，适配 logging）
+# 各源采集函数
 # ═══════════════════════════════════════════════════════════════
 
 def scrape_hackernews() -> list[CrawlerItem]:
@@ -124,7 +126,10 @@ def scrape_hackernews() -> list[CrawlerItem]:
 
 
 def scrape_github_trending() -> list[CrawlerItem]:
-    """采集 GitHub Trending"""
+    """采集 GitHub Trending
+
+    注意：推送路由在 collect_and_push 中自动转到 /api/tools 工具站，不走 crawler/push。
+    """
     logger.info("[GitHub] 正在采集...")
     r = requests.get("https://github.com/trending", proxies=proxies, timeout=15)
     html = r.text
@@ -167,66 +172,393 @@ def scrape_github_trending() -> list[CrawlerItem]:
 
 
 def scrape_producthunt() -> list[CrawlerItem]:
-    """采集 Product Hunt（兜底返回空列表不报错）"""
-    logger.info("[PH] 正在采集...")
-    headers = {
-        "User-Agent": DEFAULT_UA,
-        "Accept": "text/html,application/xhtml+xml",
-    }
+    """采集 Product Hunt（通过 Atom RSS feed，非 React 页面渲染）"""
+    logger.info("[PH] 正在采集 Product Hunt Atom feed...")
+    headers = {"User-Agent": DEFAULT_UA}
     items: list[CrawlerItem] = []
     try:
-        r = requests.get("https://www.producthunt.com/", proxies=proxies, headers=headers, timeout=15)
-        html = r.text
+        r = requests.get(
+            "https://www.producthunt.com/feed?category=undefined",
+            proxies=proxies,
+            headers=headers,
+            timeout=15,
+        )
+        # Product Hunt 使用 Atom XML 格式，带 xmlns 命名空间
+        ns = {"atom": "http://www.w3.org/2005/Atom"}
+        root = ET.fromstring(r.content)
+        for entry in root.findall('.//atom:entry', ns)[:15]:
+            title = entry.findtext('atom:title', '', ns)
+            link_el = entry.find('atom:link', ns)
+            href = link_el.get('href', '') if link_el is not None else ''
+            content_el = entry.find('atom:content', ns)
+            desc = content_el.text or '' if content_el is not None else ''
+            clean_desc = re.sub(r'<[^>]+>', '', desc).strip()
 
-        from parsel import Selector
-        sel = Selector(text=html)
-        products = sel.css("div[class*='styles_item__'], a[class*='postItem'], div[class*='postItem']")
+            if not title or not href:
+                continue
 
-        for product in products[:10]:
-            try:
-                title = product.css("a[class*='title']::text, h2::text, [class*='title']::text").get("").strip()
-                href = product.css("a[class*='title']::attr(href), a::attr(href)").get("") or ""
-                if not title or not href:
-                    continue
-                if href.startswith("/"):
-                    href = "https://www.producthunt.com" + href
+            # 提取作者作为 tag
+            author_el = entry.find('atom:author', ns)
+            author_name = author_el.findtext('atom:name', '', ns) if author_el is not None else ''
 
-                item = CrawlerItem(
-                    source_type="overseas",
-                    source_name="producthunt",
-                    lang="en",
-                    title=title,
-                    content=title,
-                    original_url=href,
-                )
-                cleaned = pipeline.process_item(item, type("spider", (), {"name": "producthunt"})())
-                if cleaned:
-                    items.append(cleaned)
-            except Exception as e:
-                logger.warning("[PH] 解析失败: %s", e)
+            item = CrawlerItem(
+                source_type="overseas",
+                source_name="producthunt",
+                lang="en",
+                title=title.strip(),
+                content=clean_desc or title.strip(),
+                original_url=href,
+                tags=["producthunt"],
+                author=author_name,
+            )
+            cleaned = pipeline.process_item(item, type("spider", (), {"name": "producthunt"})())
+            if cleaned:
+                items.append(cleaned)
     except Exception as e:
-        logger.warning("[PH] 采集异常（可忽略）: %s", e)
+        logger.warning("[PH] 采集异常: %s", e, exc_info=True)
 
     logger.info("[PH] 成功提取 %d 条", len(items))
     return items
 
 
 # ═══════════════════════════════════════════════════════════════
-# 国内源
+# 新增源
+# ═══════════════════════════════════════════════════════════════
+
+def _extract_36kr_from_json(data: dict) -> list[dict]:
+    """递归搜索 __NUXT__ JSON 中的快讯数据
+
+    Args:
+        data: 解析后的 __NUXT__ JSON dict
+
+    Returns:
+        快讯列表，每项包含 title / content / url
+    """
+    results: list[dict] = []
+
+    def _search(obj, depth: int = 0) -> None:
+        if depth > 6:
+            return
+        if isinstance(obj, dict):
+            if "title" in obj and "id" in obj:
+                results.append({
+                    "title": str(obj.get("title", "")),
+                    "content": str(obj.get("description", "") or obj.get("summary", "") or ""),
+                    "url": str(obj.get("url", "") or obj.get("link", "") or ""),
+                })
+                return
+            for v in obj.values():
+                _search(v, depth + 1)
+        elif isinstance(obj, list):
+            for item in obj:
+                _search(item, depth + 1)
+
+    _search(data)
+    return results[:15]
+
+
+def _no_proxy_session() -> requests.Session:
+    """创建一个不经过任何代理的 requests Session
+
+    在 Windows 上，即使传递 proxies=None，urllib3 仍可能读取系统代理注册表。
+    trust_env=False 让 urllib3 完全忽略环境变量和系统代理设置。
+    """
+    session = requests.Session()
+    session.trust_env = False
+    return session
+
+
+def scrape_36kr_news() -> list[CrawlerItem]:
+    """采集 36氪 快讯（投资/商业）
+
+    注意：推送路由在 collect_and_push 中自动转到 /api/opportunities，
+    因为 36氪 已是中文内容，无需经过 overseas classify + translate 流程。
+    """
+    logger.info("[36氪] 采集快讯...")
+    headers = {
+        "User-Agent": DEFAULT_UA,
+        "Referer": "https://36kr.com/",
+    }
+    items: list[CrawlerItem] = []
+    try:
+        session = _no_proxy_session()
+        r = session.get("https://36kr.com/newsflashes", headers=headers, timeout=15)
+
+        # 尝试从 __NUXT__ 内嵌 JSON 中提取结构化数据
+        matches = re.findall(
+            r'<script>window\.__NUXT__\s*=\s*(\{.*?\})</script>',
+            r.text,
+            re.DOTALL,
+        )
+        if matches:
+            try:
+                data = json.loads(matches[0])
+                flashes = _extract_36kr_from_json(data)
+                for f in flashes:
+                    item = CrawlerItem(
+                        source_type="overseas",
+                        source_name="36kr",
+                        lang="zh",
+                        title=f["title"],
+                        content=f.get("content", f["title"]),
+                        original_url=f.get("url", "https://36kr.com"),
+                        tags=["商业", "投资"],
+                    )
+                    cleaned = pipeline.process_item(
+                        item, type("spider", (), {"name": "36kr"})()
+                    )
+                    if cleaned:
+                        items.append(cleaned)
+                if items:
+                    logger.info("[36氪] 从 JSON 提取 %d 条", len(items))
+                    return items
+            except (json.JSONDecodeError, KeyError, IndexError) as e:
+                logger.warning("[36氪] JSON 解析失败，降级到 HTML 解析: %s", e)
+
+        # 降级方案：HTML 正则解析
+        titles = re.findall(
+            r'<a[^>]*class="[^"]*title[^"]*"[^>]*>(.*?)</a>',
+            r.text,
+            re.DOTALL,
+        )
+        for t in titles[:10]:
+            clean = re.sub(r'<[^>]+>', '', t).strip()
+            if clean and len(clean) > 5:
+                item = CrawlerItem(
+                    source_type="overseas",
+                    source_name="36kr",
+                    lang="zh",
+                    title=clean,
+                    content=clean,
+                    original_url="https://36kr.com",
+                    tags=["商业", "投资"],
+                )
+                cleaned = pipeline.process_item(
+                    item, type("spider", (), {"name": "36kr"})()
+                )
+                if cleaned:
+                    items.append(cleaned)
+    except Exception as e:
+        logger.warning("[36氪] 采集异常: %s", e, exc_info=True)
+
+    logger.info("[36氪] 成功提取 %d 条", len(items))
+    return items
+
+
+def scrape_design_news() -> list[CrawlerItem]:
+    """采集 DesignTAXI 设计新闻"""
+    logger.info("[设计] 采集设计新闻...")
+    headers = {"User-Agent": DEFAULT_UA}
+    items: list[CrawlerItem] = []
+    try:
+        r = requests.get(
+            "https://designtaxi.com/",
+            proxies=proxies,
+            headers=headers,
+            timeout=15,
+        )
+
+        # DesignTAXI 使用 div.highlight-news-item 包含
+        # <a href="..."><div><h3 class="heading"><span>标题</span></h3></div></a>
+        blocks = re.findall(
+            r'highlight-news-item.*?<a href="([^"]+)".*?<h3[^>]*>.*?<span>(.*?)</span>',
+            r.text,
+            re.DOTALL,
+        )
+        for href, title_html in blocks[:10]:
+            title = re.sub(r'<[^>]+>', '', title_html).strip()
+            if not title:
+                continue
+            if href.startswith('/'):
+                href = 'https://designtaxi.com' + href
+            elif not href.startswith('http'):
+                href = 'https://designtaxi.com/' + href
+
+            item = CrawlerItem(
+                source_type="overseas",
+                source_name="designtaxi",
+                lang="en",
+                title=title,
+                content=title,
+                original_url=href,
+                tags=["设计"],
+            )
+            cleaned = pipeline.process_item(
+                item, type("spider", (), {"name": "designtaxi"})()
+            )
+            if cleaned:
+                items.append(cleaned)
+
+        # 降级方案：h3 通用匹配
+        if not items:
+            h3s = re.findall(r'<h3[^>]*>(.*?)</h3>', r.text, re.DOTALL)
+            for h3_html in h3s[:10]:
+                a = re.search(r'<a[^>]*href="([^"]*)"[^>]*>(.*?)</a>', h3_html, re.DOTALL)
+                if a:
+                    href = a.group(1)
+                    title = re.sub(r'<[^>]+>', '', a.group(2)).strip()
+                    if href.startswith('/'):
+                        href = 'https://designtaxi.com' + href
+                    elif not href.startswith('http'):
+                        continue
+                    item = CrawlerItem(
+                        source_type="overseas",
+                        source_name="designtaxi",
+                        lang="en",
+                        title=title,
+                        content=title,
+                        original_url=href,
+                        tags=["设计"],
+                    )
+                    cleaned = pipeline.process_item(
+                        item, type("spider", (), {"name": "designtaxi"})()
+                    )
+                    if cleaned:
+                        items.append(cleaned)
+    except Exception as e:
+        logger.warning("[设计] 采集异常: %s", e, exc_info=True)
+
+    logger.info("[设计] 成功提取 %d 条", len(items))
+    return items
+
+
+def scrape_chengdu_gov() -> list[CrawlerItem]:
+    """采集成都政府公告（通知/补贴/政策类）"""
+    logger.info("[成都] 采集政府公告...")
+    items: list[CrawlerItem] = []
+    try:
+        session = _no_proxy_session()
+        r = session.get(
+            "https://www.chengdu.gov.cn/chengdu/c131617/list.shtml",
+            timeout=10,
+        )
+        links = re.findall(r'<a[^>]*>(.*?)</a>', r.text, re.DOTALL)
+        seen: set[str] = set()
+        for t in links:
+            clean = re.sub(r'<[^>]+>', '', t).strip()
+            if not clean or clean in seen:
+                continue
+            seen.add(clean)
+
+            # 关键词过滤：仅保留有价值的公告
+            keywords = ["补贴", "消费", "优惠", "免费", "通知", "公告", "政策"]
+            if not any(kw in clean for kw in keywords):
+                continue
+
+            item = CrawlerItem(
+                source_type="domestic",
+                source_name="gov_chengdu",
+                lang="zh",
+                title=clean,
+                content=clean,
+                original_url="http://www.chengdu.gov.cn",
+                location="成都",
+            )
+            cleaned = pipeline.process_item(
+                item, type("spider", (), {"name": "gov_chengdu"})()
+            )
+            if cleaned:
+                items.append(cleaned)
+                if len(items) >= 10:
+                    break
+    except Exception as e:
+        logger.warning("[成都] 采集失败: %s", e)
+
+    logger.info("[成都] 成功提取 %d 条", len(items))
+    return items
+
+
+# ═══════════════════════════════════════════════════════════════
+# 国内源（占位 — 保留向后兼容，用于 wechat / douyin / forum 等）
 # ═══════════════════════════════════════════════════════════════
 
 def scrape_domestic_sources() -> list[CrawlerItem]:
-    """采集国内可访问的源"""
+    """采集国内可访问的源（占位 stub）"""
     items: list[CrawlerItem] = []
-
-    logger.info("[政府] 正在采集...")
-    try:
-        r = requests.get("http://www.chengdu.gov.cn/", timeout=10)
-        logger.info("[政府] 状态码: %s", r.status_code)
-    except Exception as e:
-        logger.warning("[政府] 失败: %s", e)
-
+    logger.info("[国内] 占位 stub — 无实现")
     return items
+
+
+# ═══════════════════════════════════════════════════════════════
+# 自定义推送目标（非 crawler/push 路由）
+# ═══════════════════════════════════════════════════════════════
+
+def _get_api_base() -> str:
+    """获取后端 API 基础地址（不含 /api 后缀）"""
+    return os.environ.get("BACKEND_URL", "http://localhost:8080/api").rstrip("/api")
+
+
+def push_to_tools(item: CrawlerItem) -> bool:
+    """推送工具到 /api/tools
+
+    GitHub Trending 使用此路径，直接推送到工具站而非 crawler/push。
+
+    Args:
+        item: 清洗后的 CrawlerItem
+
+    Returns:
+        是否推送成功
+    """
+    api_base = _get_api_base()
+    url = f"{api_base}/api/tools"
+    payload = {
+        "name": item.title,
+        "url": item.original_url,
+        "description": item.content,
+        "summary": item.summary or item.content[:200],
+        "tag": ",".join(item.tags) if item.tags else "开源",
+        "source": item.source_name,
+    }
+    try:
+        r = requests.post(url, json=payload, timeout=10)
+        if r.ok:
+            return True
+        else:
+            logger.warning(
+                "[Tools] 推送失败: status=%s, %s", r.status_code, item.title[:40]
+            )
+            return False
+    except Exception as e:
+        logger.warning("[Tools] 推送异常: %s", e)
+        return False
+
+
+def push_to_opportunity(item: CrawlerItem) -> bool:
+    """推送机会到 /api/opportunities
+
+    适用于已为中文的内容（如 36氪），
+    无需经过 crawler/push 的 classify + translate 流程。
+
+    Args:
+        item: 清洗后的 CrawlerItem
+
+    Returns:
+        是否推送成功
+    """
+    api_base = _get_api_base()
+    url = f"{api_base}/api/opportunities"
+    payload = {
+        "title": item.title,
+        "description": item.content,
+        "summary": item.summary or item.content[:200],
+        "category": item.tags[0] if item.tags else "商业",
+        "sourceInfo": item.original_url,
+        "status": "pending",
+    }
+    try:
+        r = requests.post(url, json=payload, timeout=10)
+        if r.ok:
+            return True
+        else:
+            logger.warning(
+                "[Opportunity] 推送失败: status=%s, %s",
+                r.status_code,
+                item.title[:40],
+            )
+            return False
+    except Exception as e:
+        logger.warning("[Opportunity] 推送异常: %s", e)
+        return False
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -238,10 +570,12 @@ SOURCE_SCRAPERS: dict[str, tuple] = {
     "hackernews": (scrape_hackernews, "0 */2 * * *"),
     "github_trending": (scrape_github_trending, "0 */3 * * *"),
     "producthunt": (scrape_producthunt, "0 */6 * * *"),
+    "36kr": (scrape_36kr_news, "0 */3 * * *"),
+    "designtaxi": (scrape_design_news, "0 */6 * * *"),
     "wechat_chengdu": (scrape_domestic_sources, "0 */6 * * *"),
     "douyin_chengdu": (scrape_domestic_sources, "0 */6 * * *"),
     "local_forum": (scrape_domestic_sources, "0 */6 * * *"),
-    "gov_chengdu": (scrape_domestic_sources, "0 */6 * * *"),
+    "gov_chengdu": (scrape_chengdu_gov, "0 10 * * 1,3,5"),
 }
 
 
@@ -250,7 +584,12 @@ SOURCE_SCRAPERS: dict[str, tuple] = {
 # ═══════════════════════════════════════════════════════════════
 
 def collect_and_push(source_name: str, scrape_func) -> int:
-    """执行单个源的采集 -> pipeline 清洗 -> PushClient 推送
+    """执行单个源的采集 -> pipeline 清洗 -> 按源路由推送
+
+    路由规则:
+      - github_trending -> /api/tools
+      - 36kr            -> /api/opportunities
+      - 其他             -> /api/crawler/push
 
     Args:
         source_name: 数据源名称
@@ -270,12 +609,37 @@ def collect_and_push(source_name: str, scrape_func) -> int:
         return 0
 
     success_count = 0
+
     for item in items:
-        result = client.push_one(item)
-        if result.success:
-            success_count += 1
-        status = "OK" if result.success else "FAIL"
-        logger.info("  [%s] %s %s... (%d)", source_name, status, item.title[:40], result.status_code)
+        if source_name == "github_trending":
+            # GitHub Trending -> 工具站
+            ok = push_to_tools(item)
+            if ok:
+                success_count += 1
+            status = "OK" if ok else "FAIL"
+            logger.info("  [%s] %s %s...", source_name, status, item.title[:40])
+
+        elif source_name == "36kr":
+            # 36氪 -> Opportunity（已为中文，跳过 translate）
+            ok = push_to_opportunity(item)
+            if ok:
+                success_count += 1
+            status = "OK" if ok else "FAIL"
+            logger.info("  [%s] %s %s...", source_name, status, item.title[:40])
+
+        else:
+            # 默认路由 -> crawler/push
+            result = client.push_one(item)
+            if result.success:
+                success_count += 1
+            status = "OK" if result.success else "FAIL"
+            logger.info(
+                "  [%s] %s %s... (%d)",
+                source_name,
+                status,
+                item.title[:40],
+                result.status_code,
+            )
 
     logger.info("[%s] 推送完成: %d/%d 成功", source_name, success_count, len(items))
     return success_count

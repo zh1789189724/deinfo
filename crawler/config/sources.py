@@ -86,6 +86,25 @@ SOURCES: dict[str, SourceConfig] = {
         "description": "GitHub Trending",
         "seed_urls": ["https://github.com/trending"],
     },
+    # ── 新增海外源 ──
+    "36kr": {
+        "type": "overseas",
+        "lang": "zh",
+        "enabled": True,
+        "cron": "0 */3 * * *",          # 每 3 小时
+        "priority": "P0",
+        "description": "36氪 快讯（投资/商业）",
+        "seed_urls": ["https://36kr.com/newsflashes"],
+    },
+    "designtaxi": {
+        "type": "overseas",
+        "lang": "en",
+        "enabled": True,
+        "cron": "0 */6 * * *",          # 每 6 小时
+        "priority": "P1",
+        "description": "DesignTAXI 设计新闻",
+        "seed_urls": ["https://designtaxi.com/"],
+    },
 }
 
 
